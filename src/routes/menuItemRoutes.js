@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middlewares/auth');
 const { adminLimiter } = require('../middlewares/rateLimiter');
+const upload = require('../middlewares/upload');
 const {
   getMenuItems,
   createMenuItem,
@@ -16,13 +17,13 @@ router.use(adminLimiter);
 
 router.route('/')
   .get(getMenuItems)
-  .post(createMenuItem);
+  .post(upload.single('image'), createMenuItem);
 
 router.route('/reorder')
   .put(reorderMenuItems);
 
 router.route('/:id')
-  .put(updateMenuItem)
+  .put(upload.single('image'), updateMenuItem)
   .delete(deleteMenuItem);
 
 module.exports = router;

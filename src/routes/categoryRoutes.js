@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middlewares/auth');
 const { adminLimiter } = require('../middlewares/rateLimiter');
+const upload = require('../middlewares/upload');
 const {
   getCategories,
   createCategory,
@@ -16,13 +17,13 @@ router.use(adminLimiter);
 
 router.route('/')
   .get(getCategories)
-  .post(createCategory);
+  .post(upload.single('image'), createCategory);
 
 router.route('/reorder')
   .put(reorderCategories);
 
 router.route('/:id')
-  .put(updateCategory)
+  .put(upload.single('image'), updateCategory)
   .delete(deleteCategory);
 
 module.exports = router;
