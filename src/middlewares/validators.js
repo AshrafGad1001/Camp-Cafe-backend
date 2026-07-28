@@ -46,6 +46,26 @@ const menuItemValidator = [
     .optional()
     .isBoolean().withMessage('hasSizes must be a boolean')
     .toBoolean(),
+  body('sizes').custom((value, { req }) => {
+    if (req.body.hasSizes === 'true' || req.body.hasSizes === true) {
+      if (!value) throw new Error('Sizes are required when hasSizes is true');
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          throw new Error('Sizes must be a non-empty array');
+        }
+        for (const size of parsed) {
+          if (!size.name || typeof size.name !== 'string') throw new Error('Size name is required');
+          if (size.price === undefined || size.price === null || Number(size.price) < 0) {
+            throw new Error('Size price cannot be negative');
+          }
+        }
+      } catch (e) {
+        throw new Error(e.message || 'Invalid sizes format');
+      }
+    }
+    return true;
+  }),
   validate
 ];
 
