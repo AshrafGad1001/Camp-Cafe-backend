@@ -36,6 +36,7 @@ const menuItemValidator = [
     .optional({ checkFalsy: true })
     .isFloat({ min: 0 }).withMessage('Price must be a positive number'),
   body('category')
+    .optional()
     .notEmpty().withMessage('Category ID is required')
     .isMongoId().withMessage('Invalid Category ID format'),
   body('isAvailable')
