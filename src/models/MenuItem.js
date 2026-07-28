@@ -12,8 +12,24 @@ const menuItemSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true,
+    required: false,
+    default: null,
   },
+  hasSizes: {
+    type: Boolean,
+    default: false,
+  },
+  sizes: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    }
+  }],
   image: {
     url: {
       type: String,

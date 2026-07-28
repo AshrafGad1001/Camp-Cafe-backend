@@ -41,12 +41,32 @@ exports.createMenuItem = async (req, res, next) => {
 
     const count = await MenuItem.countDocuments({ category });
 
+    let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
+    let parsedSizes = [];
+
+    if (parsedHasSizes) {
+      if (req.body.sizes) {
+        try {
+          parsedSizes = typeof req.body.sizes === 'string' ? JSON.parse(req.body.sizes) : req.body.sizes;
+        } catch (e) {
+          return res.status(400).json({ success: false, message: 'Invalid sizes format' });
+        }
+      }
+      const validSizes = parsedSizes.filter(s => s.name && Number(s.price) > 0);
+      if (validSizes.length === 0) {
+        return res.status(400).json({ success: false, message: 'At least one valid size is required' });
+      }
+      parsedSizes = validSizes;
+    }
+
     const itemData = {
       name,
       description,
-      price,
+      price: parsedHasSizes ? null : price,
       category,
       isAvailable,
+      hasSizes: parsedHasSizes,
+      sizes: parsedSizes,
       displayOrder: count + 1,
     };
 
@@ -76,6 +96,32 @@ exports.updateMenuItem = async (req, res, next) => {
 
     if (!item) {
       return res.status(404).json({ success: false, message: 'MenuItem not found' });
+    }
+
+    let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
+    let parsedSizes = [];
+
+    if (req.body.hasSizes !== undefined) {
+      if (parsedHasSizes) {
+        if (req.body.sizes) {
+          try {
+            parsedSizes = typeof req.body.sizes === 'string' ? JSON.parse(req.body.sizes) : req.body.sizes;
+          } catch (e) {
+            return res.status(400).json({ success: false, message: 'Invalid sizes format' });
+          }
+        }
+        const validSizes = parsedSizes.filter(s => s.name && Number(s.price) > 0);
+        if (validSizes.length === 0) {
+          return res.status(400).json({ success: false, message: 'At least one valid size is required' });
+        }
+        req.body.sizes = validSizes;
+      } else {
+        req.body.sizes = [];
+      }
+      req.body.hasSizes = parsedHasSizes;
+      if (parsedHasSizes) {
+        req.body.price = null;
+      }
     }
 
     // Handle new image upload
