@@ -20,6 +20,9 @@ router.route('/')
   .get(getMenuItems)
   .post(upload.single('image'), checkMagicBytes, menuItemValidator, createMenuItem);
 
+router.route('/best-sellers')
+  .get(require('../controllers/menuItemController').getBestSellers);
+
 router.route('/reorder')
   .put(reorderMenuItems);
 

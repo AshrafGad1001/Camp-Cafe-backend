@@ -42,6 +42,15 @@ exports.createMenuItem = async (req, res, next) => {
     const count = await MenuItem.countDocuments({ category });
 
     let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
+    let parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
+    
+    if (parsedIsBestSeller) {
+      const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
+      if (bestSellerCount >= 10) {
+        return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأكثر مبيعاً' });
+      }
+    }
+    
     let parsedSizes = [];
 
     if (parsedHasSizes) {
@@ -65,6 +74,7 @@ exports.createMenuItem = async (req, res, next) => {
       price: parsedHasSizes ? null : price,
       category,
       isAvailable,
+      isBestSeller: parsedIsBestSeller,
       hasSizes: parsedHasSizes,
       sizes: parsedSizes,
       displayOrder: count + 1,
@@ -96,6 +106,17 @@ exports.updateMenuItem = async (req, res, next) => {
 
     if (!item) {
       return res.status(404).json({ success: false, message: 'MenuItem not found' });
+    }
+
+    if (req.body.isBestSeller !== undefined) {
+      const parsedIsBestSeller = req.body.isBestSeller === 'true' || req.body.isBestSeller === true;
+      if (parsedIsBestSeller && !item.isBestSeller) {
+        const bestSellerCount = await MenuItem.countDocuments({ isBestSeller: true });
+        if (bestSellerCount >= 10) {
+          return res.status(400).json({ success: false, message: 'لا يمكن إضافة أكثر من 10 عناصر لقائمة الأكثر مبيعاً' });
+        }
+      }
+      req.body.isBestSeller = parsedIsBestSeller;
     }
 
     let parsedHasSizes = req.body.hasSizes === 'true' || req.body.hasSizes === true;
@@ -179,6 +200,17 @@ exports.reorderMenuItems = async (req, res, next) => {
     const items = await MenuItem.find({ _id: { $in: orderedIds } }).sort({ displayOrder: 1 });
 
     res.status(200).json({ success: true, data: items });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBestSellers = async (req, res, next) => {
+  try {
+    const items = await MenuItem.find({ isBestSeller: true })
+      .populate('category', 'name');
+
+    res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
     next(error);
   }
