@@ -1,11 +1,11 @@
 const multer = require('multer');
+const FileType = require('file-type');
 
-// Use memory storage — files stay in buffer (not saved to disk)
-// We upload the buffer directly to Cloudinary
+// Use memory storage
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  // Accept only image files
+  // Basic header check, we will strictly verify using magic bytes later
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
@@ -17,8 +17,24 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max (client should compress before upload)
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
-module.exports = upload;
+const checkMagicBytes = async (req, res, next) => {
+  if (!req.file) return next();
+  
+  try {
+    const fileTypeResult = await FileType.fromBuffer(req.file.buffer);
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    
+    if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
+      return res.status(400).json({ success: false, message: 'Invalid image format detected. Only JPEG, PNG, and WebP are allowed.' });
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Error checking file format.' });
+  }
+};
+
+module.exports = { upload, checkMagicBytes };

@@ -1,0 +1,55 @@
+const { body, validationResult } = require('express-validator');
+
+// Validation handler to check for errors
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Return early with validation errors
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+  next();
+};
+
+const categoryValidator = [
+  body('name')
+    .trim()
+    .notEmpty().withMessage('Category name is required')
+    .isString().withMessage('Category name must be a string')
+    .isLength({ max: 50 }).withMessage('Category name must be less than 50 characters'),
+  body('displayOrder')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Display order must be a positive integer'),
+  validate
+];
+
+const menuItemValidator = [
+  body('name')
+    .trim()
+    .notEmpty().withMessage('Menu item name is required')
+    .isString().withMessage('Name must be a string')
+    .isLength({ max: 100 }).withMessage('Name must be less than 100 characters'),
+  body('description')
+    .optional({ checkFalsy: true })
+    .isString().withMessage('Description must be a string')
+    .trim(),
+  body('price')
+    .optional({ checkFalsy: true })
+    .isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+  body('category')
+    .notEmpty().withMessage('Category ID is required')
+    .isMongoId().withMessage('Invalid Category ID format'),
+  body('isAvailable')
+    .optional()
+    .isBoolean().withMessage('isAvailable must be a boolean')
+    .toBoolean(),
+  body('hasSizes')
+    .optional()
+    .isBoolean().withMessage('hasSizes must be a boolean')
+    .toBoolean(),
+  validate
+];
+
+module.exports = {
+  categoryValidator,
+  menuItemValidator
+};

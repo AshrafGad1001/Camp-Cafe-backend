@@ -1,8 +1,9 @@
 const express = require('express');
+const { menuItemValidator } = require('../middlewares/validators');
 const router = express.Router();
 const { protect } = require('../middlewares/auth');
 const { adminLimiter } = require('../middlewares/rateLimiter');
-const upload = require('../middlewares/upload');
+const { upload, checkMagicBytes } = require('../middlewares/upload');
 const {
   getMenuItems,
   createMenuItem,
@@ -17,13 +18,13 @@ router.use(adminLimiter);
 
 router.route('/')
   .get(getMenuItems)
-  .post(upload.single('image'), createMenuItem);
+  .post(upload.single('image'), checkMagicBytes, menuItemValidator, createMenuItem);
 
 router.route('/reorder')
   .put(reorderMenuItems);
 
 router.route('/:id')
-  .put(upload.single('image'), updateMenuItem)
+  .put(upload.single('image'), checkMagicBytes, menuItemValidator, updateMenuItem)
   .delete(deleteMenuItem);
 
 module.exports = router;

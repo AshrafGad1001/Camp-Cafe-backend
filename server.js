@@ -11,6 +11,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));
