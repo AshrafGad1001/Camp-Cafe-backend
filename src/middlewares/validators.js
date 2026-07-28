@@ -24,6 +24,7 @@ const categoryValidator = [
 
 const menuItemValidator = [
   body('name')
+    .optional()
     .trim()
     .notEmpty().withMessage('Menu item name is required')
     .isString().withMessage('Name must be a string')
