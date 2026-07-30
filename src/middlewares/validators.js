@@ -1,4 +1,6 @@
 const { body, validationResult } = require('express-validator');
+const Category = require('../models/Category');
+const MenuItem = require('../models/MenuItem');
 
 // Validation handler to check for errors
 const validate = (req, res, next) => {
@@ -15,7 +17,14 @@ const categoryValidator = [
     .trim()
     .notEmpty().withMessage('Category name is required')
     .isString().withMessage('Category name must be a string')
-    .isLength({ max: 50 }).withMessage('Category name must be less than 50 characters'),
+    .isLength({ max: 50 }).withMessage('Category name must be less than 50 characters')
+    .custom(async (value, { req }) => {
+      const existing = await Category.findOne({ name: value });
+      if (existing && existing._id.toString() !== req.params.id) {
+        throw new Error('اسم التصنيف موجود بالفعل. يرجى اختيار اسم آخر.');
+      }
+      return true;
+    }),
   body('displayOrder')
     .optional()
     .isInt({ min: 0 }).withMessage('Display order must be a positive integer'),
@@ -28,7 +37,15 @@ const menuItemValidator = [
     .trim()
     .notEmpty().withMessage('Menu item name is required')
     .isString().withMessage('Name must be a string')
-    .isLength({ max: 100 }).withMessage('Name must be less than 100 characters'),
+    .isLength({ max: 100 }).withMessage('Name must be less than 100 characters')
+    .custom(async (value, { req }) => {
+      if (!value) return true;
+      const existing = await MenuItem.findOne({ name: value });
+      if (existing && existing._id.toString() !== req.params.id) {
+        throw new Error('اسم المنتج موجود بالفعل. يرجى اختيار اسم آخر.');
+      }
+      return true;
+    }),
   body('description')
     .optional({ checkFalsy: true })
     .isString().withMessage('Description must be a string')
